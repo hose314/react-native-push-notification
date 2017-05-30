@@ -20,7 +20,7 @@ NotificationsComponent.prototype.getInitialNotification = function () {
     return RNPushNotification.getInitialNotification()
         .then(function (notification) {
             if (notification && notification.dataJSON) {
-                return JSON.parse(notification.dataJSON);
+								return JSON.parse(notification.dataJSON);
             }
             return null;
         });
@@ -67,8 +67,9 @@ NotificationsComponent.prototype.addEventListener = function(type: string, handl
 		listener =  DeviceEventEmitter.addListener(
 			DEVICE_NOTIF_EVENT,
 			function(notifData) {
-				var data = JSON.parse(notifData.dataJSON);
-				handler(data);
+				if (notifData.payload) {
+					handler(notifData)
+				}
 			}
 		);
 	} else if (type === 'register') {
@@ -82,22 +83,23 @@ NotificationsComponent.prototype.addEventListener = function(type: string, handl
 		listener = DeviceEventEmitter.addListener(
 			REMOTE_FETCH_EVENT,
 			function(notifData) {
-				var notificationData = JSON.parse(notifData.dataJSON)
-				handler(notificationData);
+				if (notifData.payload) {
+					handle(notifData.payload)
+				}
 			}
 		);
 	}
 
-	_notifHandlers.set(type, listener);
+	_notifHandlers.set(handler, listener);
 };
 
 NotificationsComponent.prototype.removeEventListener = function(type: string, handler: Function) {
-	var listener = _notifHandlers.get(type);
+	var listener = _notifHandlers.get(handler);
 	if (!listener) {
 		return;
 	}
 	listener.remove();
-	_notifHandlers.delete(type);
+	_notifHandlers.delete(handler);
 }
 
 NotificationsComponent.prototype.registerNotificationActions = function(details: Object) {
@@ -112,4 +114,3 @@ module.exports = {
 	state: false,
 	component: new NotificationsComponent()
 };
-
